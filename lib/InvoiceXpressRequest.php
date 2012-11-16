@@ -142,9 +142,10 @@ class InvoiceXpressRequest {
 	*
 	* @return array
 	*/
-	public function request()
+	public function request($id = '')
 	{
-	
+		// https://popybox.invoicexpress.net/invoice/754887/change-state.xml?api_key=65105fc52689bb87571db3dd23b8523ebb7a37d6
+		
 		if(!self::$_domain || !self::$_token)
 		{
 			throw new InvoiceXpressRequestException('You need to call InvoiceXpressRequest::init($domain, $token) with your domain and token.');
@@ -158,15 +159,23 @@ class InvoiceXpressRequest {
 		
 		$class = explode(".", $this->_method);
 		
-		$url = str_replace('{{ CLASS }}', $class[0], $url);
-		$url .= "?api_key=7d60951cbbb8642df884aecbaadd4fe848ed29ee";
+		if ($class[1] == "change-state" || $class[1] == "email-invoice")
+			$url = str_replace('{{ CLASS }}', "invoice/".$id."/".$class[1], $url);
+		elseif ($class[0] == "clients" && $class[1] == "get") {
+			$url = str_replace('{{ CLASS }}', "clients/".$id, $url);
+		} else {
+			$url = str_replace('{{ CLASS }}', $class[0], $url);
+		}
+
+		$url .= "?api_key=".self::$_token;
 		
 		$ch = curl_init();    // initialize curl handle
 		error_log("URL = ".$url);
 		curl_setopt($ch, CURLOPT_URL, $url); // set url to post to
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return into a variable
 		curl_setopt($ch, CURLOPT_TIMEOUT, 40); // times out after 40s
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data); // add POST fields
+		if ($class[0] != "clients" && $class[1] != "get")
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data); // add POST fields
 		curl_setopt($ch, CURLOPT_USERPWD, self::$_token . ':X');
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/xml; charset=utf-8"));
@@ -183,16 +192,23 @@ class InvoiceXpressRequest {
 		{
 			curl_close($ch);
 		}
-	
-		$response = json_decode(json_encode(simplexml_load_string($result)), true);
-		$r = print_r($response, true);
-		error_log("response = ".$r);	
+
+		// if weird simplexml error then you may have the a user with
+		// a user_meta wc_ie_client_id defined that not exists in InvoiceXpress
+		if ($result && $result != " ") {
+			$res = print_r($result, true);
+			error_log("result = {".$res."}");
+			
+			$response = json_decode(json_encode(simplexml_load_string($result)), true);
+			$r = print_r($response, true);
+			error_log("response = ".$r);	
 		
-		$this->_response = $response;
+			$this->_response = $response;
+		}
 		
+		$this->_success = (($http_status == '201 Created') || ($http_status == '200 OK'));
 		error_log("http status = ".$http_status);
 		
-		$this->_success = ($http_status == '201 Created');
 		if(isset($response['error']))
 		{
 			$this->_error = $response['error'];

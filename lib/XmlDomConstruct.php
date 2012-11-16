@@ -63,6 +63,10 @@ class XmlDomConstruct extends DOMDocument {
 
                 else {
                     $node = $this->createElement($index);
+                    
+                    if ($index == "items") // hack needed for InvoiceXpress
+                    	$node->setAttribute( 'type', 'array' );
+                    
                     $domElement->appendChild($node);
                 }
 
