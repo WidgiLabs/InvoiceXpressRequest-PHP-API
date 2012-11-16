@@ -143,9 +143,7 @@ class InvoiceXpressRequest {
 	* @return array
 	*/
 	public function request($id = '')
-	{
-		// https://popybox.invoicexpress.net/invoice/754887/change-state.xml?api_key=65105fc52689bb87571db3dd23b8523ebb7a37d6
-		
+	{		
 		if(!self::$_domain || !self::$_token)
 		{
 			throw new InvoiceXpressRequestException('You need to call InvoiceXpressRequest::init($domain, $token) with your domain and token.');
