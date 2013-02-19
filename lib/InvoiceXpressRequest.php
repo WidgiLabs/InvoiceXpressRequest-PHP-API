@@ -175,7 +175,6 @@ class InvoiceXpressRequest {
 		if ($class[0] != "clients" && $class[1] != "get")
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data); // add POST fields
 		curl_setopt($ch, CURLOPT_USERPWD, self::$_token . ':X');
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/xml; charset=utf-8"));
 	
 		$result = curl_exec($ch);
