@@ -157,22 +157,27 @@ class InvoiceXpressRequest {
 		
 		$class = explode(".", $this->_method);
 		
+		$ch = curl_init();    // initialize curl handle
+		
 		if ($class[1] == "change-state" || $class[1] == "email-invoice")
 			$url = str_replace('{{ CLASS }}', "invoice/".$id."/".$class[1], $url);
 		elseif ($class[0] == "clients" && $class[1] == "get") {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
 			$url = str_replace('{{ CLASS }}', "clients/".$id, $url);
 		} else {
 			$url = str_replace('{{ CLASS }}', $class[0], $url);
+			curl_setopt($ch, CURLOPT_POST, 1);
+			error_log("POST Request = true");
 		}
 
 		$url .= "?api_key=".self::$_token;
 		
-		$ch = curl_init();    // initialize curl handle
+	
 		error_log("URL = ".$url);
 		curl_setopt($ch, CURLOPT_URL, $url); // set url to post to
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return into a variable
 		curl_setopt($ch, CURLOPT_TIMEOUT, 40); // times out after 40s
-		if ($class[0] != "clients" && $class[1] != "get")
+		if ($class[1] != "get")
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data); // add POST fields
 		curl_setopt($ch, CURLOPT_USERPWD, self::$_token . ':X');
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
