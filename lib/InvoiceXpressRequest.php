@@ -164,6 +164,12 @@ class InvoiceXpressRequest {
 		elseif ($class[0] == "clients" && $class[1] == "get") {
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
 			$url = str_replace('{{ CLASS }}', "clients/".$id, $url);
+		} elseif ($class[0] == "clients" && $class[1] == "update") {
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+				$url = str_replace('{{ CLASS }}', "clients/".$id, $url);
+		} elseif ($class[0] == "simplified_invoices" && $class[1] == "get") {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+			$url = str_replace('{{ CLASS }}', "simplified_invoices/".$id, $url);
 		} else {
 			$url = str_replace('{{ CLASS }}', $class[0], $url);
 			curl_setopt($ch, CURLOPT_POST, 1);
