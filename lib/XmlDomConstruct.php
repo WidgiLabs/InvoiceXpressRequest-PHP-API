@@ -74,7 +74,12 @@ class XmlDomConstruct extends DOMDocument {
 
             }
         } else {
-            $domElement->appendChild($this->createTextNode($mixed));
+            if(is_numeric($mixed)){
+                $textNode = $this->createTextNode($mixed);
+            } else {
+                $textNode = $this->createCDATASection($mixed);
+            }
+            $domElement->appendChild($textNode);
         }
 
     }
