@@ -241,19 +241,19 @@ class InvoiceXpressRequest {
         return $url;
     }
 
-    /**
+ /**
      * request
      *
      * Send the request over the wire
      *
      * 
      * @param int       $id         InvoiceXpress invoice ID
-     * @param array     $extra      Special case usage for adding Extra parameter GET before API_KEY (ex: https://:screen-name.invoicexpress.net/clients/find-by-code.xml?client_code=Ni+Hao&API_KEY=XXX)
+     * @param string    $extra      Special case usage for adding Extra parameter GET before API_KEY (ex: https://:screen-name.invoicexpress.net/clients/find-by-code.xml?client_code=Ni+Hao&API_KEY=XXX)
      * 
      * 
      * @return  array
      */
-    public function request($id = '') {
+    public function request($id = '', $extra = '') {
         if (!self::$_domain || !self::$_token) {
             throw new InvoiceXpressRequestException('You need to call InvoiceXpressRequest::init($domain, $token) with your domain and token.');
         }
