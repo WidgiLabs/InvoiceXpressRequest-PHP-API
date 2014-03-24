@@ -160,6 +160,7 @@ class InvoiceXpressRequest {
                 break;
             case 'change-state':
             case 'email-invoice':
+            case 'email-document':
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
                 $url = str_replace('{{ CLASS }}', $class[0] . "/" . $id . "/" . $class[1], $url);
                 break;
