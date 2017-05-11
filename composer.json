@@ -1,8 +1,22 @@
 {
-    "name": "WidgiLabs/InvoiceXpressRequest-PHP-API",
-    "description": "A simple wrapper for making requests with the InvoiceXpress API",
-"keywords": [
-    "invocexpress",
+  "name": "widgilabs/InvoiceXpressRequest-PHP-API",
+  "description": "A simple wrapper for making requests with the InvoiceXpress API",
+  "type": "library",
+  "keywords": [
+    "invoicexpress",
     "library"
   ],
+  "homepage": "http://widgilabs.com/",
+  "license": "GPL-2.0+",
+  "authors": [
+    {
+      "name": "WidgiLabs",
+      "email": "dev@widgilabs.com",
+      "homepage": "http://widgilabs.com/"
+    }
+  ],
+  "support": {
+    "issues": "http://widgilabs.com/",
+    "source": "http://widgilabs.com/"
+  }
 }
