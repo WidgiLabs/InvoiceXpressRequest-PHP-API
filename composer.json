@@ -1,6 +1,6 @@
 {
     "name": "WidgiLabs/InvoiceXpressRequest-PHP-API",
-    "description": "A simple wrapper for making requests with the InvoiceXpress API"
+    "description": "A simple wrapper for making requests with the InvoiceXpress API",
 "keywords": [
     "invocexpress",
     "library"
