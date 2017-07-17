@@ -18,5 +18,8 @@
   "support": {
     "issues": "http://widgilabs.com/",
     "source": "http://widgilabs.com/"
+  },
+  "autoload": {
+    "files": ["lib/InvoiceXpressRequest.php"]
   }
 }
