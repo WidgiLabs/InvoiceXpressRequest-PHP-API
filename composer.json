@@ -7,7 +7,7 @@
     "library"
   ],
   "homepage": "http://widgilabs.com/",
-  "license": "GPL-2.0+-only",
+  "license": "GPL-2.0-or-later",
   "authors": [
     {
       "name": "WidgiLabs",
