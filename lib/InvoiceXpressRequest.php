@@ -27,7 +27,7 @@ class InvoiceXpressRequest {
 	 * The API url we're hitting. {{ DOMAIN }} will get replaced with $domain
 	* when you set InvoiceXpressRequest::init($domain, $token)
 	*/
-	protected $_api_url = 'https://{{ DOMAIN }}.invoicexpress.net/{{ CLASS }}.xml';
+	protected $_api_url = 'https://{{ DOMAIN }}.invoicexpress.com/{{ CLASS }}.xml';
 	
 	/*
 	 * Stores the current method we're using. Example:
