@@ -137,89 +137,184 @@ class InvoiceXpressRequest {
 	
 	}
 	
-	/*
-	 * Send the request over the wire
-	*
-	* @return array
-	*/
-	public function request($id = '')
-	{		
-		if(!self::$_domain || !self::$_token)
-		{
-			throw new InvoiceXpressRequestException('You need to call InvoiceXpressRequest::init($domain, $token) with your domain and token.');
-		}
-	
-		$post_data = $this->getGeneratedXML();
-		$p = print_r($post_data, true);
-		error_log("post = ".$p);
-		
-		$url = str_replace('{{ DOMAIN }}', self::$_domain, $this->_api_url);
-		
-		$class = explode(".", $this->_method);
-		
-		$ch = curl_init();    // initialize curl handle
-		
-		if ($class[1] == "change-state" || $class[1] == "email-invoice")
-			$url = str_replace('{{ CLASS }}', "invoice/".$id."/".$class[1], $url);
-		elseif ($class[0] == "clients" && $class[1] == "get") {
-			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-			$url = str_replace('{{ CLASS }}', "clients/".$id, $url);
-		} elseif ($class[0] == "clients" && $class[1] == "update") {
-				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-				$url = str_replace('{{ CLASS }}', "clients/".$id, $url);
-		} elseif ($class[0] == "simplified_invoices" && $class[1] == "get") {
-			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-			$url = str_replace('{{ CLASS }}', "simplified_invoices/".$id, $url);
-		} else {
-			$url = str_replace('{{ CLASS }}', $class[0], $url);
-			curl_setopt($ch, CURLOPT_POST, 1);
-			error_log("POST Request = true");
-		}
+    /**
+     * invoiceMethods
+     *
+     * Handle all Invoice & Simplified invoices requests
+     *
+     * 
+     * @param bool      $ch         cURL Handle
+     * @param array     $class      InvoiceXpress Method to run exploded
+     * @param string    $url        Built URL so far      
+     * @param int       $id         InvoiceXpress invoice ID
+     * 
+     * @return  string
+     */
+    public function invoiceMethods($ch, $class, $url, $id) {
 
-		$url .= "?api_key=".self::$_token;
-		
-	
-		error_log("URL = ".$url);
-		curl_setopt($ch, CURLOPT_URL, $url); // set url to post to
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return into a variable
-		curl_setopt($ch, CURLOPT_TIMEOUT, 40); // times out after 40s
-		if ($class[1] != "get")
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data); // add POST fields
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/xml; charset=utf-8"));
-	
-		$result = curl_exec($ch);
-		$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-			
-		if(curl_errno($ch))
-		{
-			$this->_error = 'A cURL error occured: ' . curl_error($ch);
-			return;
-		}
-		else
-		{
-			curl_close($ch);
-		}
+        switch ($class[1]) {
+            case 'create':
+            case 'list':
+                $url = str_replace('{{ CLASS }}', $class[0], $url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                break;
+            case 'change-state':
+            case 'email-invoice':
+            case 'email-document':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                $url = str_replace('{{ CLASS }}', $class[0] . "/" . $id . "/" . $class[1], $url);
+                break;
+            case 'get':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                $url = str_replace('{{ CLASS }}', $class[0] . "/" . $id, $url);
+                break;
+            case 'update':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                $url = str_replace('{{ CLASS }}', $class[0] . "/" . $id, $url);
+                break;
+        }
 
-		// if weird simplexml error then you may have the a user with
-		// a user_meta wc_ie_client_id defined that not exists in InvoiceXpress
-		if ($result && $result != " ") {
-			$res = print_r($result, true);
-			error_log("result = {".$res."}");
-			
-			$response = json_decode(json_encode(simplexml_load_string($result)), true);
-			$r = print_r($response, true);
-			error_log("response = ".$r);	
-		
-			$this->_response = $response;
-		}
-		
-		$this->_success = (($http_status == '201 Created') || ($http_status == '200 OK'));
-		error_log("http status = ".$http_status);
-		
-		if(isset($response['error']))
-		{
-			$this->_error = $response['error'];
-		}
-	
-	}
+        $url .= "?api_key=" . self::$_token;
+
+
+        return $url;
+    }
+
+    /**
+     * clientMethods
+     *
+     * Handle all client requests
+     *
+     * 
+     * @param bool      $ch         cURL Handle
+     * @param array     $class      InvoiceXpress Method to run exploded
+     * @param string    $url        Built URL so far      
+     * @param int       $id         InvoiceXpress invoice ID
+     * @param string    $extra      Special case usage for adding Extra parameter GET before API_KEY
+     * 
+     * @return  string
+     */
+    public function clientMethods($ch, $class, $url, $id, $extra = '') {
+
+        switch ($class[1]) {
+            case 'create':
+            case 'list':
+                $url = str_replace('{{ CLASS }}', $class[0], $url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                $url .= "?api_key=" . self::$_token;
+                break;
+            case 'get':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                $url = str_replace('{{ CLASS }}', "clients/" . $id, $url);
+                $url .= "?api_key=" . self::$_token;
+                break;
+            case 'update':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                $url = str_replace('{{ CLASS }}', "clients/" . $id, $url);
+                $url .= "?api_key=" . self::$_token;
+                break;
+            case 'invoices':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                $url = str_replace('{{ CLASS }}', "clients/" . $id . "/" . $class[1], $url);
+                $url .= "?api_key=" . self::$_token;
+                break;
+            case 'find-by-name':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                $url = str_replace('{{ CLASS }}', "clients/" . $class[1], $url);
+                $url .= "?client_name=" . $extra . "&api_key=" . self::$_token;
+                break;
+            case 'find-by-code':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                $url = str_replace('{{ CLASS }}', "clients/" . $class[1], $url);
+                $url .= "?client_code=" . $extra . "&api_key=" . self::$_token;
+                break;
+            case 'create-invoice':
+            case 'create-cash-invoice':
+            case 'create-credit-note':
+            case 'create-debit-note':
+                list($before, $after) = explode('-', $class[1], 2);
+                $url = str_replace('{{ CLASS }}', "clients/" . $id . "/" . $before . "/" . $after, $url);
+                $url .= "?api_key=" . self::$_token;
+                break;
+        }
+
+
+        return $url;
+    }
+
+ /**
+     * request
+     *
+     * Send the request over the wire
+     *
+     * 
+     * @param int       $id         InvoiceXpress invoice ID
+     * @param string    $extra      Special case usage for adding Extra parameter GET before API_KEY (ex: https://:screen-name.invoicexpress.net/clients/find-by-code.xml?client_code=Ni+Hao&API_KEY=XXX)
+     * 
+     * 
+     * @return  array
+     */
+    public function request($id = '', $extra = '') {
+        if (!self::$_domain || !self::$_token) {
+            throw new InvoiceXpressRequestException('You need to call InvoiceXpressRequest::init($domain, $token) with your domain and token.');
+        }
+
+        $post_data = $this->getGeneratedXML();
+        $p = print_r($post_data, true);
+        error_log("post = " . $p);
+
+        $url = str_replace('{{ DOMAIN }}', self::$_domain, $this->_api_url);
+
+        $class = explode(".", $this->_method);
+
+        $ch = curl_init();    // initialize curl handle
+        //Filter correct method to run and return $url
+        switch ($class[0]) {
+            case 'invoices':
+            case 'simplified_invoices':
+                $url = $this->invoiceMethods($ch, $class, $url, $id);
+                break;
+            case 'clients':
+                $url = $this->clientMethods($ch, $class, $url, $id, $extra);
+                break;
+        }
+
+        error_log("URL = " . $url);
+        curl_setopt($ch, CURLOPT_URL, $url); // set url to post to
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return into a variable
+        curl_setopt($ch, CURLOPT_TIMEOUT, 40); // times out after 40s
+        if ($class[1] != "get")
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data); // add POST fields
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/xml; charset=utf-8"));
+
+        $result = curl_exec($ch);
+        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            $this->_error = 'A cURL error occured: ' . curl_error($ch);
+            return;
+        } else {
+            curl_close($ch);
+        }
+
+        // if weird simplexml error then you may have the a user with
+        // a user_meta wc_ie_client_id defined that not exists in InvoiceXpress
+        if ($result && $result != " ") {
+            $res = print_r($result, true);
+            error_log("result = {" . $res . "}");
+
+            $response = json_decode(json_encode(simplexml_load_string($result)), true);
+            $r = print_r($response, true);
+            error_log("response = " . $r);
+
+            $this->_response = $response;
+        }
+
+        $this->_success = (($http_status == '201 Created') || ($http_status == '200 OK'));
+        error_log("http status = " . $http_status);
+
+        if (isset($response['error'])) {
+            $this->_error = $response['error'];
+        }
+    }
 }
